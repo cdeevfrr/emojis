@@ -61,6 +61,11 @@ const blockingMovementStrings = new Set([
     9,
 ])
 
+// You can only harvest between values 5 and 8 (inclusive)
+// Harvesting reduces size by 4
+// Things only grow by themselves between 3 and 7 (inclusive)
+// So harvesting at 5 or 6 is detrimental - you should wait for 7 or 8.
+
 /// Begin async stuff
 window.onload = async function(){
     
@@ -69,6 +74,8 @@ window.onload = async function(){
      */ 
     const mainScreen = document.getElementById("mainScreen")
     const playerStats = document.getElementById("playerStats")
+
+    const tickTimer = setInterval(tick, 1000)
 
     document.addEventListener('keydown', event => handleKeypress(event))
 
@@ -160,7 +167,7 @@ window.onload = async function(){
             return;
         }
 
-        if (5 < target && target < 9){
+        if (5 <= target && target <= 8){
             target -= 4
             playerMoney += 4
         }
@@ -213,6 +220,18 @@ window.onload = async function(){
         && 0 <= x && x < map[y].length 
         && ! blockingMovementStrings.has(map[y][x])
         && map[y][x] in imageFor;
+    }
+
+    function tick(){
+        console.log("Running tick");
+        // Grow things
+        for (const row of map){
+            for (let i = 0; i < row.length; i ++){
+                if (3 <= row[i] && row[i] <= 7 && Math.random() < .2){
+                    row[i] += 1
+                }
+            }
+        }
     }
 
 
