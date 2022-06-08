@@ -10,11 +10,12 @@
             Move with asdw
         </p>
         <p>
-            Interact with a tile using enter 
+            Interact with a tile using enter (grow) or space (harvest)
         </p>
         <p>
             Reset by refreshing the page!
         </p>
+        <p id="playerStats"></p>
     </div>
 </body>
 
@@ -24,6 +25,9 @@
 // These things can be done before document loading.
 const playerLocation = {x: 3, y: 3}
 let playerDirection = "d"
+let playerMoney = 0
+let playerEnergy = 10
+
 const mapString = 
 `999999999999999999
 9001000011100000000
@@ -35,8 +39,14 @@ const map = mapString.split("\n").map(x => Array.from(x).map(char => Number(char
 
 const imageFor = {
     0: "_",
-    1: "#",
-    2: "*",
+    1: ".",
+    2: ",",
+    3: "+",
+    4: "i",
+    5: "l",
+    6: ")",
+    7: "|",
+    8: "T",
     9: "▓",
 }
 
@@ -46,7 +56,8 @@ const defaultHeight= 7
 
 
 const blockingMovementStrings = new Set([
-    2,
+    7,
+    8,
     9,
 ])
 
@@ -57,6 +68,7 @@ window.onload = async function(){
      * @type HTMLTextAreaElement
      */ 
     const mainScreen = document.getElementById("mainScreen")
+    const playerStats = document.getElementById("playerStats")
 
     document.addEventListener('keydown', event => handleKeypress(event))
 
@@ -79,6 +91,8 @@ window.onload = async function(){
         toPrint[Math.floor(height / 2)][Math.floor(width / 2)] = playerIcon[playerDirection]
 
         mainScreen.value = toPrint.map(row => row.join("")).join("\n")
+
+        playerStats.innerText = `Money: \$${playerMoney}  Energy: ${playerEnergy}`
     }
 
     function findImageFor(mapNumber){
@@ -102,7 +116,11 @@ window.onload = async function(){
         }
 
         if (event.key == "Enter"){
-            handleInteraction(playerDirection)
+            handleGrowInteraction()
+        }
+
+        if (event.key == " "){
+            harvest()
         }
 
         printLocation({})
@@ -133,9 +151,30 @@ window.onload = async function(){
         }
     }
 
-    function handleInteraction(playerDirection){
+    function harvest(){
         const targetLocation = interactingLocation(playerDirection)
-        console.log(`Handling interaction at ${JSON.stringify(targetLocation)}`)
+        console.log(`Handling harvest interaction at ${JSON.stringify(targetLocation)}`)
+        let target = map[targetLocation.y]?.[targetLocation.x]
+
+        if (target == 9 ){
+            return;
+        }
+
+        if (5 < target && target < 9){
+            target -= 4
+            playerMoney += 4
+        }
+
+        if (target > 9){
+            target = 0
+        }
+
+        map[targetLocation.y][targetLocation.x] = target
+    }
+
+    function handleGrowInteraction(){
+        const targetLocation = interactingLocation(playerDirection)
+        console.log(`Handling grow interaction at ${JSON.stringify(targetLocation)}`)
 
         // Expand the map if you interacted off the edge of it.
         if (targetLocation.y == map.length){
