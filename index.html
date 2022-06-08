@@ -1,0 +1,109 @@
+
+<body>
+    <textarea id="mainScreen" readonly style="height:200px">
+
+    </textarea>
+</body>
+
+
+<script>
+
+// These things can be done before document loading.
+const playerLocation = {x: 3, y: 3}
+const mapString = 
+`0000000011100000000
+0001000011100000000
+0020000011100000000
+0000100011100000000
+0000000011100000000
+0100000011100000000
+`
+const map = mapString.split("\n").map(x => Array.from(x))
+
+const imageFor = {
+    "0": "_",
+    "1": "#",
+    "2": "*",
+}
+
+
+const blockingMovementStrings = new Set([
+    "2"
+])
+
+/// Begin async stuff
+window.onload = async function(){
+    
+    /**
+     * @type HTMLTextAreaElement
+     */ 
+    const mainScreen = document.getElementById("mainScreen")
+
+    document.addEventListener('keydown', event => handleKeypress(event))
+
+    function printLocation({x = playerLocation.x, y = playerLocation.y, width = 3, height = 3}){
+        let toPrint = ""
+        // the point (x=0, y=0) is the top left. Positive y is down.
+        for (let j = y - Math.floor(width/2); j < y + Math.ceil(width / 2); j += 1){
+            for (let i = x- Math.floor(width/2); i < x + Math.ceil(width / 2); i+=1){
+                let nextChar = "0"
+                if (0 <= j && j < map.length){
+                    if (0 <= i && i < map[j].length){
+                        nextChar = imageFor[map[j][i]]
+                    }
+                }
+                toPrint += nextChar
+            }
+            toPrint += "\n"
+        }
+        mainScreen.value = toPrint
+        console.log(toPrint)
+    }
+
+
+
+    /**
+     * @param {KeyboardEvent} event 
+     */ 
+    function handleKeypress(event){
+        if (event.key in directions){
+            move(event.key)
+        }
+        console.log(`Got event for key ${event.key}`)
+        console.log(`New location: ${JSON.stringify(playerLocation)}`)
+        printLocation({})
+    }
+
+    const directions = {
+        a: {x: -1, y: 0},
+        s: {x: 0,  y: 1},
+        d: {x: 1,  y: 0},
+        w: {x: 0,  y: -1},
+    }
+
+    function move(directionKey){
+        const toAdd = directions[directionKey]
+
+        newX = playerLocation.x + toAdd.x
+        newY = playerLocation.y + toAdd.y
+
+        const canMoveThere = canMove(newX, newY)
+
+        if(canMoveThere){
+            playerLocation.x = newX
+            playerLocation.y = newY
+        }
+    }
+
+    function canMove(x, y){
+        return 0 <= y && y < map.length 
+        && 0 <= x && x < map[y].length 
+        && ! blockingMovementStrings.has(map[y][x]);
+    }
+
+
+
+
+    printLocation({})
+}
+</script>
