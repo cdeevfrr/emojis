@@ -75,9 +75,28 @@ window.onload = async function(){
     const mainScreen = document.getElementById("mainScreen")
     const playerStats = document.getElementById("playerStats")
 
-    const tickTimer = setInterval(tick, 1000)
+    mainScreen.onclick = () => {
+        mainScreen.requestPointerLock()
+    }
 
-    document.addEventListener('keydown', event => handleKeypress(event))
+    document.addEventListener('pointerlockchange',pointerLockChangeListener, false);
+    let tickInterval = null
+
+    function pointerLockChangeListener(){
+        if (document.pointerLockElement === mainScreen){
+            console.log("Adding listeners")
+            mainScreen.addEventListener('keydown', handleKeypress)
+            tickInterval = tickInterval ||  setInterval(tick, 1000)
+        } else {
+            console.log("Removing listeners")
+            mainScreen.removeEventListener('keydown', handleKeypress, true)
+
+            if(tickInterval){
+                clearInterval(tickInterval)
+                tickInterval = null
+            }
+        }
+    }
 
     function printLocation({
         x = playerLocation.x, 
@@ -232,6 +251,7 @@ window.onload = async function(){
                 }
             }
         }
+        printLocation({})
     }
 
 
