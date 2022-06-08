@@ -29,7 +29,7 @@ let playerMoney = 0
 let playerEnergy = 10
 
 const mapString = 
-`999999999999999999
+`9999999999999999999
 9001000011100000000
 9020000011100000000
 9000100011100000000
@@ -118,7 +118,7 @@ window.onload = async function(){
 
         mainScreen.value = toPrint.map(row => row.join("")).join("\n")
 
-        playerStats.innerText = `Money: \$${playerMoney}  Energy: ${playerEnergy}`
+        playerStats.innerText = `Money: \$${playerMoney}  Energy: ${Math.floor(playerEnergy)}`
     }
 
     function findImageFor(mapNumber){
@@ -187,12 +187,23 @@ window.onload = async function(){
         }
 
         if (5 <= target && target <= 8){
-            target -= 4
-            playerMoney += 4
+            if (playerEnergy > 1){
+                playerEnergy -= 1
+                target -= 4
+                playerMoney += 4
+                if (target == 8){
+                    playerEnergy += 1.25
+                }
+            }
+
         }
 
         if (target > 9){
-            target = 0
+            if (playerEnergy > 2){
+                playerEnergy -= 2
+
+                target = 0
+            }
         }
 
         map[targetLocation.y][targetLocation.x] = target
@@ -201,6 +212,12 @@ window.onload = async function(){
     function handleGrowInteraction(){
         const targetLocation = interactingLocation(playerDirection)
         console.log(`Handling grow interaction at ${JSON.stringify(targetLocation)}`)
+
+        if (playerEnergy < 1){
+            return
+        }
+        playerEnergy -= 1
+
 
         // Expand the map if you interacted off the edge of it.
         if (targetLocation.y == map.length){
@@ -246,11 +263,16 @@ window.onload = async function(){
         // Grow things
         for (const row of map){
             for (let i = 0; i < row.length; i ++){
-                if (3 <= row[i] && row[i] <= 7 && Math.random() < .2){
+                if (3 <= row[i] && row[i] <= 7 && Math.random() < .02){
                     row[i] += 1
                 }
             }
         }
+        playerEnergy += .25
+        if (playerEnergy > 50){
+            playerEnergy = 10
+        }
+
         printLocation({})
     }
 
