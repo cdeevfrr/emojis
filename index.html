@@ -29,12 +29,12 @@ const mapString =
 0000000011100000000
 0100000011100000000
 `
-const map = mapString.split("\n").map(x => Array.from(x))
+const map = mapString.split("\n").map(x => Array.from(x).map(char => Number(char)))
 
 const imageFor = {
-    "0": "_",
-    "1": "#",
-    "2": "*",
+    0: "_",
+    1: "#",
+    2: "*",
 }
 
 const defaultWidth = 11
@@ -43,7 +43,7 @@ const defaultHeight= 7
 
 
 const blockingMovementStrings = new Set([
-    "2"
+    2
 ])
 
 /// Begin async stuff
@@ -67,13 +67,7 @@ window.onload = async function(){
         for (let j = y - Math.floor(height/2); j < y + Math.ceil(height / 2); j += 1){
             const row = []
             for (let i = x- Math.floor(width/2); i < x + Math.ceil(width / 2); i+=1){
-                let nextChar = "0"
-                if (0 <= j && j < map.length){
-                    if (0 <= i && i < map[j].length){
-                        nextChar = imageFor[map[j][i]]
-                    }
-                }
-                row.push(nextChar)
+                row.push(findImageFor(map[j]?.[i]))
             }
             toPrint.push(row)
         }
@@ -82,6 +76,14 @@ window.onload = async function(){
 
         mainScreen.value = toPrint.map(row => row.join("")).join("\n")
         console.log(toPrint)
+    }
+
+    function findImageFor(mapNumber){
+        if (mapNumber in imageFor){
+            return imageFor[mapNumber]
+        }
+
+        return "0"
     }
 
 
@@ -97,8 +99,9 @@ window.onload = async function(){
         }
 
         if (event.key == "Enter"){
-
+            handleInteraction(playerDirection)
         }
+
         printLocation({})
 
 
@@ -118,28 +121,43 @@ window.onload = async function(){
         w: {x: 0,  y: -1},
     }
 
-    function move(directionKey){
+    function interactingLocation(directionKey){
         const toAdd = directions[directionKey]
+
+        return {
+            x: playerLocation.x + toAdd.x,
+            y: playerLocation.y + toAdd.y,
+        }
+    }
+
+    function handleInteraction(playerDirection){
+        console.log("Handling interaction")
+        const newLocation = interactingLocation(playerDirection)
+        const target = map[newLocation.y][newLocation.x]
+
+        // For now, just increment the target by 1.
+        map[newLocation.y][newLocation.x] = target + 1
+
+    }
+
+    function move(directionKey){
         playerDirection = directionKey
+        const newLocation = interactingLocation(directionKey)
 
-        newX = playerLocation.x + toAdd.x
-        newY = playerLocation.y + toAdd.y
-
-        const canMoveThere = canMove(newX, newY)
+        const canMoveThere = canMove(newLocation.x, newLocation.y)
 
         if(canMoveThere){
-            playerLocation.x = newX
-            playerLocation.y = newY
+            playerLocation.x = newLocation.x
+            playerLocation.y = newLocation.y
         }
     }
 
     function canMove(x, y){
         return 0 <= y && y < map.length 
         && 0 <= x && x < map[y].length 
-        && ! blockingMovementStrings.has(map[y][x]);
+        && ! blockingMovementStrings.has(map[y][x])
+        && map[y][x] in imageFor;
     }
-
-
 
 
     printLocation({})
