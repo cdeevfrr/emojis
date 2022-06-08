@@ -1,7 +1,7 @@
 
 <body>
     <div style="justify-content: center; text-align: center">
-    <textarea id="mainScreen" readonly style="height:8.2em; width: 7.2em ; font-size: 10vmin; text-align: center; margin:auto">
+    <textarea id="mainScreen" readonly style="height:8.3em; width: 7.2em ; font-size: 10vmin; text-align: center; margin:auto">
 
     </textarea>
     </div>
@@ -11,6 +11,9 @@
         </p>
         <p>
             Interact with a tile using enter 
+        </p>
+        <p>
+            Reset by refreshing the page!
         </p>
     </div>
 </body>
@@ -22,19 +25,19 @@
 const playerLocation = {x: 3, y: 3}
 let playerDirection = "d"
 const mapString = 
-`0000000011100000000
-0001000011100000000
-0020000011100000000
-0000100011100000000
-0000000011100000000
-0100000011100000000
-`
+`999999999999999999
+9001000011100000000
+9020000011100000000
+9000100011100000000
+9000000011100000000
+9100000011100000000`
 const map = mapString.split("\n").map(x => Array.from(x).map(char => Number(char)))
 
 const imageFor = {
     0: "_",
     1: "#",
     2: "*",
+    9: "▓",
 }
 
 const defaultWidth = 11
@@ -43,7 +46,8 @@ const defaultHeight= 7
 
 
 const blockingMovementStrings = new Set([
-    2
+    2,
+    9,
 ])
 
 /// Begin async stuff
@@ -75,7 +79,6 @@ window.onload = async function(){
         toPrint[Math.floor(height / 2)][Math.floor(width / 2)] = playerIcon[playerDirection]
 
         mainScreen.value = toPrint.map(row => row.join("")).join("\n")
-        console.log(toPrint)
     }
 
     function findImageFor(mapNumber){
@@ -131,12 +134,26 @@ window.onload = async function(){
     }
 
     function handleInteraction(playerDirection){
-        console.log("Handling interaction")
-        const newLocation = interactingLocation(playerDirection)
-        const target = map[newLocation.y][newLocation.x]
+        const targetLocation = interactingLocation(playerDirection)
+        console.log(`Handling interaction at ${JSON.stringify(targetLocation)}`)
+
+        // Expand the map if you interacted off the edge of it.
+        if (targetLocation.y == map.length){
+            console.log("Expanding the map downward!")
+            map.push(new Array(map[0].length).fill(-1))
+            map[map.length - 1][0] = 9
+        }
+        if (targetLocation.x == map[0].length){
+            console.log("Expanding the map rightward!")
+            map.forEach(row => row.push(-1))
+            map[0][map[0].length - 1] = 9
+        }
+
+        const target = map[targetLocation.y]?.[targetLocation.x]
 
         // For now, just increment the target by 1.
-        map[newLocation.y][newLocation.x] = target + 1
+        // We're skipping 9 because I'm reserving 9 for "can't be modified" (so you can add permanent walls to the map)
+        map[targetLocation.y][targetLocation.x] = target == 8? target + 2 : target + 1
 
     }
 
