@@ -5,6 +5,14 @@
 
     </textarea>
     </div>
+    <div style="text-align: center">
+        <p>
+            Move with asdw
+        </p>
+        <p>
+            Interact with a tile using enter 
+        </p>
+    </div>
 </body>
 
 
@@ -12,6 +20,7 @@
 
 // These things can be done before document loading.
 const playerLocation = {x: 3, y: 3}
+let playerDirection = "d"
 const mapString = 
 `0000000011100000000
 0001000011100000000
@@ -69,7 +78,7 @@ window.onload = async function(){
             toPrint.push(row)
         }
         // Show the player in the center instead.
-        toPrint[Math.floor(height / 2)][Math.floor(width / 2)] = "🙂"
+        toPrint[Math.floor(height / 2)][Math.floor(width / 2)] = playerIcon[playerDirection]
 
         mainScreen.value = toPrint.map(row => row.join("")).join("\n")
         console.log(toPrint)
@@ -81,12 +90,25 @@ window.onload = async function(){
      * @param {KeyboardEvent} event 
      */ 
     function handleKeypress(event){
+        console.log(`"Got event ${event.key}`)
+
         if (event.key in directions){
             move(event.key)
         }
-        console.log(`Got event for key ${event.key}`)
-        console.log(`New location: ${JSON.stringify(playerLocation)}`)
+
+        if (event.key == "Enter"){
+
+        }
         printLocation({})
+
+
+    }
+
+    const playerIcon = {
+        "d": "😗",
+        "s": "🙃",
+        "a": "🧐",
+        "w": "🙂",
     }
 
     const directions = {
@@ -98,6 +120,7 @@ window.onload = async function(){
 
     function move(directionKey){
         const toAdd = directions[directionKey]
+        playerDirection = directionKey
 
         newX = playerLocation.x + toAdd.x
         newY = playerLocation.y + toAdd.y
