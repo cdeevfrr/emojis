@@ -6,16 +6,15 @@
     </textarea>
     </div>
     <div style="text-align: center">
+        <p id="playerStats"></p>
         <p>
             Move with asdw
         </p>
         <p>
-            Interact with a tile using enter (grow) or space (harvest)
+            Grow (enter) or Harvest (space) your crops!
         </p>
         <p>
-            Reset by refreshing the page!
         </p>
-        <p id="playerStats"></p>
     </div>
 </body>
 
@@ -26,7 +25,7 @@
 const playerLocation = {x: 3, y: 3}
 let playerDirection = "d"
 let playerMoney = 0
-let playerEnergy = 10
+let playerEnergy = 40
 
 const mapString = 
 `9999999999999999999
@@ -188,12 +187,12 @@ window.onload = async function(){
 
         if (5 <= target && target <= 8){
             if (playerEnergy > 1){
-                playerEnergy -= 1
-                target -= 4
-                playerMoney += 4
                 if (target == 8){
                     playerEnergy += 1.25
                 }
+                playerEnergy -= 1
+                target -= 4
+                playerMoney += 4
             }
 
         }
@@ -263,13 +262,14 @@ window.onload = async function(){
         // Grow things
         for (const row of map){
             for (let i = 0; i < row.length; i ++){
-                if (3 <= row[i] && row[i] <= 7 && Math.random() < .02){
+                if (3 <= row[i] && row[i] <= 7 && Math.random() < .08){
                     row[i] += 1
                 }
             }
         }
+        // Gain energy
         playerEnergy += .25
-        if (playerEnergy > 50){
+        if (playerEnergy > 100){
             playerEnergy = 10
         }
 
