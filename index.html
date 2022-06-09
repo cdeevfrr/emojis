@@ -233,6 +233,10 @@ window.onload = async function(){
 
         const target = map[targetLocation.y]?.[targetLocation.x]
 
+        if (target == 9){
+            return
+        }
+        
         // For now, just increment the target by 1.
         // We're skipping 9 because I'm reserving 9 for "can't be modified" (so you can add permanent walls to the map)
         map[targetLocation.y][targetLocation.x] = target == 8? target + 2 : target + 1
