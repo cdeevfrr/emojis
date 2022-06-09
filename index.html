@@ -80,6 +80,9 @@ window.onload = async function(){
      */ 
     const mainScreen = document.getElementById("mainScreen")
     const playerStats = document.getElementById("playerStats")
+    const leftNotification = document.getElementById("leftNotification")
+    const rightNotification = document.getElementById("rightNotification")
+
 
     mainScreen.onclick = () => {
         mainScreen.requestPointerLock()
@@ -183,36 +186,81 @@ window.onload = async function(){
         }
     }
 
+    const dollarsPerHarvestStage = {
+        5: 4,
+        6: 4,
+        7: 8,
+        8: 4
+    }
+    const decrementPerHarvestStage = {
+        5: 4,
+        6: 4,
+        7: 4,
+        8: 4
+    }
+    const energyUsePerHarvestStage = {
+        5: 1,
+        6: 1,
+        7: 1,
+        8: -.25,
+    }
+
     function harvest(){
         const targetLocation = interactingLocation(playerDirection)
         console.log(`Handling harvest interaction at ${JSON.stringify(targetLocation)}`)
         let target = map[targetLocation.y]?.[targetLocation.x]
 
-        if (target == 9 ){
+        if (!target){
+            return
+        }
+
+        if (target == 9){
             return;
         }
 
-        if (5 <= target && target <= 8){
-            if (playerEnergy > 1){
-                if (target == 8){
-                    playerEnergy += 1.25
-                }
-                playerEnergy -= 1
-                target -= 4
-                playerMoney += 4
-            }
-
+        if (target < 5){
+            return;
         }
 
-        if (target > 9){
-            if (playerEnergy > 2){
+        if (target < 9 && playerEnergy > 1){
+            playerEnergy -= energyUsePerHarvestStage[target]
+            increasePlayerMoney(dollarsPerHarvestStage[target])
+            target -= decrementPerHarvestStage[target]
+        }
+
+        if (target > 9 && playerEnergy > 2){
                 playerEnergy -= 2
-
                 target = 0
-            }
         }
+
+        console.log(`setting map location to new value ${target}`)
 
         map[targetLocation.y][targetLocation.x] = target
+    }
+
+    function increasePlayerMoney(grownAmount){
+        playerMoney += grownAmount
+        notify(`+ $${grownAmount}`)
+    }
+
+    /**
+     * @type 
+     */ 
+    let endNotificationTimer = null
+    function notify(toNotify){
+        leftNotification.innerText = toNotify
+        rightNotification.innerText = toNotify
+
+        if (endNotificationTimer){
+            clearTimeout(endNotificationTimer)
+        }
+        endNotificationTimer = setTimeout(endNotification, 1000)
+    }
+
+    function endNotification(){
+        leftNotification.innerText = ""
+        rightNotification.innerText = ""
+        endNotificationTimer = null
     }
 
     function handleGrowInteraction(){
