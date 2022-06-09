@@ -1,21 +1,27 @@
 
 <body>
-    <div style="justify-content: center; text-align: center">
-    <textarea id="mainScreen" readonly style="height:8.6em; width: 7.2em ; font-size: 10vmin; text-align: center; margin:auto">
+    <div style="justify-content: center; text-align: center; display: flex">
+        <div>
+            <p id="leftNotification" style="height: 100px"></p>
+            <p>
+                Move with asdw
+            </p>
+            <p>
+                Grow (enter) or Harvest (h) your crops!
+            </p>
+        </div>
+        <textarea id="mainScreen" readonly style="height:8.6em; width: 7.2em ; font-size: 10vmin; text-align: center; margin:auto">
+        </textarea>
+        <div>
+            <p id="rightNotification" style="height: 100px"></p>
+            <p>T gives a little bit of energy 😉</p>
+        </div>
 
-    </textarea>
     </div>
-    <div style="text-align: center">
-        <p id="playerStats"></p>
-        <p>
-            Move with asdw
-        </p>
-        <p>
-            Grow (enter) or Harvest (space) your crops!
-        </p>
-        <p>T gives a little bit of energy 😉</p>
-        <p>
-        </p>
+    <div style="text-align: center; justify-content: center;">
+        <div>
+            <p id="playerStats" style="color: green"></p>
+        </div>
     </div>
 </body>
 
@@ -145,7 +151,7 @@ window.onload = async function(){
             handleGrowInteraction()
         }
 
-        if (event.key == " "){
+        if (event.key == "h"){
             harvest()
         }
 
