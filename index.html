@@ -33,6 +33,7 @@ const playerLocation = {x: 3, y: 3}
 let playerDirection = "d"
 let playerMoney = 0
 let playerEnergy = 40
+const maxPlayerEnergy = 100
 
 const mapString = 
 `9999999999999999999
@@ -328,8 +329,8 @@ window.onload = async function(){
         }
         // Gain energy
         playerEnergy += .25
-        if (playerEnergy > 100){
-            playerEnergy = 10
+        if (playerEnergy > maxPlayerEnergy){
+            playerEnergy = maxPlayerEnergy
         }
 
         printLocation({})
