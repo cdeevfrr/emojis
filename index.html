@@ -27,25 +27,15 @@
 
 
 <script>
-
-// These things can be done before document loading.
-const playerLocation = {x: 3, y: 3}
-let playerDirection = "d"
-let playerMoney = 0
-let playerEnergy = 40
-const maxPlayerEnergy = 100
-
-const mapString = 
-`9999999999999999999
-9001000011100000000
-9020003011100000080
-9000103011100000080
-9000003011100000080
-9100000011100000080`
-const map = mapString.split("\n").map(x => Array.from(x).map(char => Number(char)))
+const maxEntityEnergy = 100
 
 const imageFor = {
     0: "_",
+    // 1: Crop image
+    9: "▓",
+}
+
+const cropImages = {
     1: ".",
     2: ",",
     3: "+",
@@ -54,17 +44,210 @@ const imageFor = {
     6: ")",
     7: "|",
     8: "T",
-    9: "▓",
+}
+
+
+function createCrop(){
+    newCrop = {
+        stage: 0,
+        maxStage: 8,
+        blocksMovement: function (){ 7 <= this.stage && this.stage <=8},
+        harvestCost: function() {console.log(this)},
+    }
+    for (const key in newCrop){
+        if (newCrop.key instanceof Function){
+            newCrop.key.bind(newCrop)
+        }
+    }
+
+    stage;
+    maxStage = 8
+
+    blocksMovement(){
+        return 7 <= this.stage && this.stage <=8
+    }
+
+    harvestCost(){
+        if (this.stage > this.maxStage){
+            return 2
+        }
+        return 1
+    }
+
+    canHarvest(){
+        return this.stage > 3
+    }
+
+    moneyGain(){
+        if(this.stage > this.maxStage){
+            return 0
+        }
+        return 4
+    }
+
+    newStageFromHarvest(){
+        if(this.stage > this.maxStage){
+            return -1
+        }
+        return this.stage - 4
+    }
+
+    canAutoGrow(){
+        return this.stage >= 3 && this.stage < this.maxStage
+    }
+
+    grow(){
+        this.stage += 1
+    }
+
+    harvest(harvestingEntity){
+        if( harvestingEntity.tryDecrementEnergy(this.harvestCost()) ){
+            harvestingEntity.increaseMoney(this.moneyGain())
+            this.stage = this.newStageFromHarvest()
+        }
+    }
+
+    image(){
+        if (this.stage in cropImages){
+            return cropImages[this.stage]
+        }
+        return "#"
+    }
+}
+
+class BaseCrop extends Crop{
+    constructor(){
+        super()
+        this.stage = 1
+    }
+
+    moneyGain(){
+        if(this.stage == 7){
+            return 8
+        }
+        return super.moneyGain() 
+    }
+    harvestCost(){
+        if(this.stage == 8){
+            return -1 // If fully grown, you get 1 energy back.
+        }
+        return super()
+    }
+}
+
+const directions = {
+    a: {x: -1, y: 0},
+    s: {x: 0,  y: 1},
+    d: {x: 1,  y: 0},
+    w: {x: 0,  y: -1},
+}
+
+class Entity{
+    direction;
+    money;
+    energy;
+    location;
+
+    move(directionKey){
+        this.direction = directionKey
+        const newLocation = this.interactingLocation()
+
+        const canMoveThere = this.canMove(newLocation.x, newLocation.y)
+
+        if(canMoveThere){
+            this.location.x = newLocation.x
+            this.location.y = newLocation.y
+        }
+    }
+
+    canMove(x, y){
+        return 0 <= y && y < map.length 
+        && 0 <= x && x < map[y].length 
+        && ! blockingMovementTiles.has(map[y][x])
+        && ( map[y][x] in imageFor || 
+          (map[y][x] instanceof Crop && !map[y][x].blocksMovement())
+        );
+    }
+
+    tryDecrementEnergy(amount){
+        if (this.energy > amount){
+            this.energy -= amount
+            return true
+        }
+        return false
+    }
+
+    increaseMoney(amount){
+        return
+    }
+
+    harvest(){
+        const targetLocation = this.interactingLocation()
+        console.log(`Handling harvest interaction at ${JSON.stringify(targetLocation)}`)
+        let target = map[targetLocation.y]?.[targetLocation.x]
+
+        if (target == null){
+            return
+        }
+
+        if(target instanceof Crop){
+            target.harvest(this) // the crop will decrement the entity's energy.
+            if (target.stage == -1){
+                map[targetLocation.y][targetLocation.x] = 0
+            }
+        }
+    }
+
+    grow(){
+        const targetLocation = this.interactingLocation()
+        console.log(`Handling grow interaction at ${JSON.stringify(targetLocation)}`)
+
+        const target = map[targetLocation.y]?.[targetLocation.x]
+
+        if (target instanceof Crop){
+            if (this.energy < 1){
+                return
+            }
+            this.energy -= 1
+
+            target.grow()
+        }
+    }
+
+    interactingLocation(){
+        const toAdd = directions[this.direction]
+
+        return {
+            x: this.location.x + toAdd.x,
+            y: this.location.y + toAdd.y,
+        }
+    }
+}
+
+class Farmer extends Entity{
+
+}
+
+const mapString = 
+`9999999999999999999
+9001000011100000000
+9010001011100000010
+9000101011100000010
+9000001011100000010
+9100000011100000010`
+const map = mapString.split("\n").map(x => Array.from(x).map(char => Number(char)))
+for (let row of map){
+    for (let i =0; i < row.length; i ++){
+        if (row[i] == 1){
+            row[i] = new BaseCrop()
+        }
+    }
 }
 
 const defaultWidth = 11
 const defaultHeight= 7
 
-
-
-const blockingMovementStrings = new Set([
-    7,
-    8,
+const blockingMovementTiles = new Set([
     9,
 ])
 
@@ -89,6 +272,7 @@ window.onload = async function(){
         mainScreen.requestPointerLock()
     }
 
+    // Pointer lock listers
     document.addEventListener('pointerlockchange',pointerLockChangeListener, false);
     let tickInterval = null
 
@@ -108,9 +292,35 @@ window.onload = async function(){
         }
     }
 
+    const playerIcon = {
+        "d": "😗",
+        "s": "🙃",
+        "a": "🧐",
+        "w": "🙂",
+    }
+
+    class Player extends Entity{
+        constructor(){
+            super()
+            this.location = {x: 3, y: 3}
+            this.direction = "d"
+            this.money = 0
+            this.energy = 40
+        }
+
+        increaseMoney(amount){
+            this.money += amount
+            notify(`+ $${amount}`)
+        }
+    }
+
+    const player = new Player()
+
+    // End pointer lock listeners
+
     function printLocation({
-        x = playerLocation.x, 
-        y = playerLocation.y, 
+        x = player.location.x, 
+        y = player.location.y, 
         width = defaultWidth, 
         height = defaultHeight
     }){
@@ -124,16 +334,20 @@ window.onload = async function(){
             toPrint.push(row)
         }
         // Show the player in the center instead.
-        toPrint[Math.floor(height / 2)][Math.floor(width / 2)] = playerIcon[playerDirection]
+        toPrint[Math.floor(height / 2)][Math.floor(width / 2)] = playerIcon[player.direction]
 
         mainScreen.value = toPrint.map(row => row.join("")).join("\n")
 
-        playerStats.innerText = `Money: \$${playerMoney}  Energy: ${Math.floor(playerEnergy)}`
+        playerStats.innerText = `Money: \$${player.money}  Energy: ${Math.floor(player.energy)}`
     }
 
-    function findImageFor(mapNumber){
-        if (mapNumber in imageFor){
-            return imageFor[mapNumber]
+    function findImageFor(mapElement){
+        if (mapElement in imageFor){
+            return imageFor[mapElement]
+        }
+
+        if (mapElement instanceof Crop){
+            return mapElement.image()
         }
 
         return "0"
@@ -148,100 +362,18 @@ window.onload = async function(){
         console.log(`"Got event ${event.key}`)
 
         if (event.key in directions){
-            move(event.key)
+            player.move(event.key)
         }
 
         if (event.key == "Enter"){
-            handleGrowInteraction()
+            player.grow()
         }
 
         if (event.key == "h"){
-            harvest()
+            player.harvest()
         }
 
         printLocation({})
-
-
-    }
-
-    const playerIcon = {
-        "d": "😗",
-        "s": "🙃",
-        "a": "🧐",
-        "w": "🙂",
-    }
-
-    const directions = {
-        a: {x: -1, y: 0},
-        s: {x: 0,  y: 1},
-        d: {x: 1,  y: 0},
-        w: {x: 0,  y: -1},
-    }
-
-    function interactingLocation(directionKey){
-        const toAdd = directions[directionKey]
-
-        return {
-            x: playerLocation.x + toAdd.x,
-            y: playerLocation.y + toAdd.y,
-        }
-    }
-
-    const dollarsPerHarvestStage = {
-        5: 4,
-        6: 4,
-        7: 8,
-        8: 4
-    }
-    const decrementPerHarvestStage = {
-        5: 4,
-        6: 4,
-        7: 4,
-        8: 4
-    }
-    const energyUsePerHarvestStage = {
-        5: 1,
-        6: 1,
-        7: 1,
-        8: -1,
-    }
-
-    function harvest(){
-        const targetLocation = interactingLocation(playerDirection)
-        console.log(`Handling harvest interaction at ${JSON.stringify(targetLocation)}`)
-        let target = map[targetLocation.y]?.[targetLocation.x]
-
-        if (!target){
-            return
-        }
-
-        if (target == 9){
-            return;
-        }
-
-        if (target < 5){
-            return;
-        }
-
-        if (target < 9 && playerEnergy > 1){
-            playerEnergy -= energyUsePerHarvestStage[target]
-            increasePlayerMoney(dollarsPerHarvestStage[target])
-            target -= decrementPerHarvestStage[target]
-        }
-
-        if (target > 9 && playerEnergy > 2){
-                playerEnergy -= 2
-                target = 0
-        }
-
-        console.log(`setting map location to new value ${target}`)
-
-        map[targetLocation.y][targetLocation.x] = target
-    }
-
-    function increasePlayerMoney(grownAmount){
-        playerMoney += grownAmount
-        notify(`+ $${grownAmount}`)
     }
 
     /**
@@ -264,73 +396,22 @@ window.onload = async function(){
         endNotificationTimer = null
     }
 
-    function handleGrowInteraction(){
-        const targetLocation = interactingLocation(playerDirection)
-        console.log(`Handling grow interaction at ${JSON.stringify(targetLocation)}`)
-
-        if (playerEnergy < 1){
-            return
-        }
-        playerEnergy -= 1
-
-
-        // Expand the map if you interacted off the edge of it.
-        if (targetLocation.y == map.length){
-            console.log("Expanding the map downward!")
-            map.push(new Array(map[0].length).fill(-1))
-            map[map.length - 1][0] = 9
-        }
-        if (targetLocation.x == map[0].length){
-            console.log("Expanding the map rightward!")
-            map.forEach(row => row.push(-1))
-            map[0][map[0].length - 1] = 9
-        }
-
-        const target = map[targetLocation.y]?.[targetLocation.x]
-
-        if (target == 9){
-            return
-        }
-        
-        // For now, just increment the target by 1.
-        // We're skipping 9 because I'm reserving 9 for "can't be modified" (so you can add permanent walls to the map)
-        map[targetLocation.y][targetLocation.x] = target == 8? target + 2 : target + 1
-
-    }
-
-    function move(directionKey){
-        playerDirection = directionKey
-        const newLocation = interactingLocation(directionKey)
-
-        const canMoveThere = canMove(newLocation.x, newLocation.y)
-
-        if(canMoveThere){
-            playerLocation.x = newLocation.x
-            playerLocation.y = newLocation.y
-        }
-    }
-
-    function canMove(x, y){
-        return 0 <= y && y < map.length 
-        && 0 <= x && x < map[y].length 
-        && ! blockingMovementStrings.has(map[y][x])
-        && map[y][x] in imageFor;
-    }
-
     function tick(){
         console.log("Running tick");
         // Grow things
         for (const row of map){
-            for (let i = 0; i < row.length; i ++){
-                if (3 <= row[i] && row[i] <= 7 && Math.random() < .08){
-                    row[i] += 1
+            for (const target of row){
+                if (target.canAutoGrow && target.canAutoGrow()){
+                    if (Math.random() < .8){
+                        target.grow()
+                    }
                 }
             }
         }
         // Gain energy
-        playerEnergy += .25
-        if (playerEnergy > maxPlayerEnergy){
-            playerEnergy = maxPlayerEnergy
+        player.energy += .25
+        if (player.energy > maxEntityEnergy){
+            player.energy = maxEntityEnergy
         }
 
         printLocation({})
