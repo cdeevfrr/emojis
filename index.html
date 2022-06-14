@@ -46,22 +46,19 @@ const cropImages = {
     8: "T",
 }
 
+class Crop{
+    stage;
+    maxStage;
+    constructor(){}
 
-function createCrop(){
-    newCrop = {
-        stage: 0,
-        maxStage: 8,
-        blocksMovement: function (){ 7 <= this.stage && this.stage <=8},
-        harvestCost: function() {console.log(this)},
-    }
-    for (const key in newCrop){
-        if (newCrop.key instanceof Function){
-            newCrop.key.bind(newCrop)
+    toJSON(){
+        return {
+            [this.constructor.name]: {
+                stage: this.stage, 
+                maxStage: this.maxStage,
+            }
         }
     }
-
-    stage;
-    maxStage = 8
 
     blocksMovement(){
         return 7 <= this.stage && this.stage <=8
@@ -116,9 +113,10 @@ function createCrop(){
 }
 
 class BaseCrop extends Crop{
-    constructor(){
+    constructor({stage, maxStage} = {stage: 1, maxStage: 8}){
         super()
-        this.stage = 1
+        this.stage = stage || 1
+        this.maxStage = maxStage || 8
     }
 
     moneyGain(){
@@ -127,12 +125,32 @@ class BaseCrop extends Crop{
         }
         return super.moneyGain() 
     }
+
     harvestCost(){
         if(this.stage == 8){
             return -1 // If fully grown, you get 1 energy back.
         }
-        return super()
+        return super.harvestCost()
     }
+}
+
+const crops = {
+    "BaseCrop": BaseCrop,
+}
+
+function parseMap(text){
+    // the second arg will read any crops as actual crops.
+    const newMap = JSON.parse(text)
+    for (row of newMap){
+        for(let i = 0; i < row.length; i ++){
+            for(key in row[i]){
+                if (key in crops){
+                    row[i] = new (crops[key])(row[i][key])
+                }
+            }
+        }
+    }
+    return newMap
 }
 
 const directions = {
@@ -191,9 +209,11 @@ class Entity{
         }
 
         if(target instanceof Crop){
-            target.harvest(this) // the crop will decrement the entity's energy.
-            if (target.stage == -1){
-                map[targetLocation.y][targetLocation.x] = 0
+            if(target.canHarvest()){
+                target.harvest(this) // the crop will decrement the entity's energy.
+                if (target.stage == -1){
+                    map[targetLocation.y][targetLocation.x] = 0
+                }
             }
         }
     }
@@ -228,21 +248,8 @@ class Farmer extends Entity{
 
 }
 
-const mapString = 
-`9999999999999999999
-9001000011100000000
-9010001011100000010
-9000101011100000010
-9000001011100000010
-9100000011100000010`
-const map = mapString.split("\n").map(x => Array.from(x).map(char => Number(char)))
-for (let row of map){
-    for (let i =0; i < row.length; i ++){
-        if (row[i] == 1){
-            row[i] = new BaseCrop()
-        }
-    }
-}
+const mapString2 = '[[9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9],[9,0,0,{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,0,0],[9,0,{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,{"BaseCrop":{"stage":5,"maxStage":8}},0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0],[9,0,0,0,{"BaseCrop":{"stage":2,"maxStage":8}},0,{"BaseCrop":{"stage":5,"maxStage":8}},0,{"BaseCrop":{"stage":2,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0],[9,0,0,0,0,0,{"BaseCrop":{"stage":5,"maxStage":8}},0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0],[9,{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0]]'
+const map = parseMap(mapString2)
 
 const defaultWidth = 11
 const defaultHeight= 7
@@ -402,7 +409,7 @@ window.onload = async function(){
         for (const row of map){
             for (const target of row){
                 if (target.canAutoGrow && target.canAutoGrow()){
-                    if (Math.random() < .8){
+                    if (Math.random() < .08){
                         target.grow()
                     }
                 }
