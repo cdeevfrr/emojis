@@ -499,9 +499,8 @@ window.onload = async function(){
             }
         }
         // Gain energy
-        player.energy += .25
-        if (player.energy > maxEntityEnergy){
-            player.energy = maxEntityEnergy
+        if (player.energy < maxEntityEnergy){
+            player.energy += .25
         }
 
         printLocation({})
