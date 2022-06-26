@@ -314,15 +314,18 @@ class Entity{
         const target = map[targetLocation.y]?.[targetLocation.x]
 
         if (this.energy < 1){
-            return
+            return false
         }
         this.energy -= 1
 
         if (target instanceof Crop){
             target.grow()
+            return true
         } if (isFinite(target) && target != 9){
             map[targetLocation.y][targetLocation.x] = new BaseCrop()
+            return true
         }
+        return false
     }
 
     interactingLocation(){
@@ -357,7 +360,7 @@ class Farmer extends Entity{
         this.houseLocation = houseLocation
         this.direction = "w"
         this.money = 0
-        this.energy = 40
+        this.energy = 80
 
         /// Small state so that farmers can do 
         // different things based on last ticks
@@ -392,6 +395,7 @@ class Farmer extends Entity{
         let target = map[targetLocation.y]?.[targetLocation.x]
 
         if(target instanceof Crop){
+            // If the target gives energy
             if (target.harvestCost() < 0){
                 return true
             }
@@ -792,13 +796,13 @@ window.onload = async function(){
         }
 
         if (event.key == "Enter"){
-            player.grow()
-            onCloseFarmer(player, entities, (player, farmer) => {
-                const message = farmer.noticePlayerGrow(player)
-                if (Math.random() < .5){
-                    notify(message)
-                }
-            })
+            const growSuccessful = player.grow()
+            if (growSuccessful){
+                onCloseFarmer(player, entities, (player, farmer) => {
+                    const message = farmer.noticePlayerGrow(player)
+                        notify(message)
+                })
+            }
         }
 
         if (event.key == "h"){
