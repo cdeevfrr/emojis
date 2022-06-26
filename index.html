@@ -360,34 +360,32 @@ class Farmer extends Entity{
         this.houseLocation = houseLocation
         this.direction = "w"
         this.money = 0
-        this.energy = 100
+        this.energy = 40
 
         /// Small state so that farmers can do 
         // different things based on last ticks
         // behavior.
         this.plannedMoves = []
-        this.grewLastTurn = false
+        this.grewAgoTurns = 0
         this.squareMoveNextGoal = {x: 2, y: 2}
     }
 
     tickMove(){
+        this.grewAgoTurns += 1
         if (this.wantsToHarvest()){
             this.harvest()
             return
         }
         if(this.plannedMoves.length > 0){
             this.tryMove(this.plannedMoves.pop())
-        } else {
-            if (!this.grewLastTurn){
-                if(this.energy > 10 ){
-                    this.grow()
-                }
-                this.grewLastTurn = true
-            } else {
-                this.squareMove()
-                this.grewLastTurn = false
-            }
-        }
+            return
+        } 
+        if (this.wantsToGrow()){
+            this.grow()
+            this.grewAgoTurns = 0
+            return
+        } 
+        this.squareMove()
     }
 
     wantsToHarvest(){
@@ -403,6 +401,13 @@ class Farmer extends Entity{
     }
 
     wantsToGrow(){
+        if (this.grewAgoTurns < 2){
+            return false
+        }
+        if (this.energy < 10){
+            return false
+        }
+
         const targetLocation = this.interactingLocation()
         let target = map[targetLocation.y]?.[targetLocation.x]
 
@@ -463,9 +468,22 @@ class Farmer extends Entity{
      * Finally, return false if none of those things worked.
      */
     tryMove(direction){
+        if (direction == "wait"){
+            return true
+        }
         if (this.move(direction)){ // move(direction) also sets this entity's direction heading.
             return true
         }
+        const targetLocation = this.interactingLocation()
+        let target = map[targetLocation.y]?.[targetLocation.x]
+        if (target instanceof Crop && target.harvestCost() > 0 && target.blocksMovement() && !this.currentlyWaiting){
+            for (const i of [1,2,3,4,5]){
+                this.plannedMoves.push("wait")
+            }
+            this.currentlyWaiting = true
+            return true
+        }
+        this.currentlyWaiting = false
         if (! isNaN(this.harvest())){
             return true
         }
