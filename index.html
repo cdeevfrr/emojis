@@ -360,7 +360,7 @@ class Farmer extends Entity{
         this.houseLocation = houseLocation
         this.direction = "w"
         this.money = 0
-        this.energy = 80
+        this.energy = 100
 
         /// Small state so that farmers can do 
         // different things based on last ticks
@@ -498,7 +498,7 @@ class Farmer extends Entity{
         if (this.house.playerOpinion > 100){
             return relationshipIcon[this.direction]
         }
-        if (this.house.playerOpinion < -2){
+        if (this.house.playerOpinion < -5){
             return enemyIcon[this.direction]
         }
         return playerIcon[this.direction]
@@ -509,15 +509,15 @@ class Farmer extends Entity{
 
         console.log(`Noticing harvest when house is ${JSON.stringify(this.house)}`)
         console.log(`Noticing harvest when opinion is ${this.house.playerOpinion}`)
-        if (this.house.playerOpinion < -10){
+        if (this.house.playerOpinion < -30){
             player.money -= 10
             return "Get your butt out of here you varmit! Quit stealin my hard earned work! You're paying me double for that."
         }
-        if (this.house.playerOpinion < -5){
+        if (this.house.playerOpinion < -15){
             return "I told you, those are MY crops!"
         }
 
-        if (this.house.playerOpinion == -5){
+        if (this.house.playerOpinion < -5){
             return "Hey!! Those are my crops! Go grow your own."
         }
 
