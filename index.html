@@ -55,16 +55,20 @@ class Crop{
         return {
             [this.constructor.name]: {
                 stage: this.stage, 
-                maxStage: this.maxStage,
             }
         }
     }
 
     blocksMovement(){
-        return 7 <= this.stage && this.stage <=8
+        return this.unknownStage() || 7 <= this.stage && this.stage <=8
+    }
+
+    unknownStage(){
+        return this.stage < 0 || this.stage > this.maxStage
     }
 
     harvestCost(){
+        // Negative stages cannot be harvested.
         if (this.stage > this.maxStage){
             return 2
         }
@@ -72,18 +76,20 @@ class Crop{
     }
 
     canHarvest(){
+        // negative stages cannot be harvested.
+        // Unknown stages greater than maxStage are weeds and CAN be harvested.
         return this.stage > 4
     }
 
     moneyGain(){
-        if(this.stage > this.maxStage){
+        if(this.unknownStage()){
             return 0
         }
         return 4
     }
 
     newStageFromHarvest(){
-        if(this.stage > this.maxStage){
+        if(this.unknownStage()){
             return -1
         }
         return this.stage - 4
@@ -257,12 +263,75 @@ class Farmer extends Entity{
 }
 
 const mapString2 = `[
-    [9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9],
-    [9,0,0,{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,0,0],
-    [9,0,{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,{"BaseCrop":{"stage":5,"maxStage":8}},0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0],
-    [9,0,0,0,{"BaseCrop":{"stage":2,"maxStage":8}},0,{"BaseCrop":{"stage":5,"maxStage":8}},0,{"BaseCrop":{"stage":2,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0],
-    [9,0,0,0,0,0,{"BaseCrop":{"stage":5,"maxStage":8}},0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0],
-    [9,{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0]]`
+    [
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        -1,-1,-1,-1,-1,-1,-1,-1,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        -1,-1,-1,-1,-1,-1,-1,-1,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ],
+    [
+        0,0,0,{"BaseCrop":{"stage":1}},0,0,0,0,{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},0,0,0,0,0,0,0,0,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        -1,-1,-1,-1,-1,-1,-1,-1,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        -1,-1,-1,-1,-1,-1,-1,-1,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ],
+    [
+        0,0,{"BaseCrop":{"stage":1}},0,0,0,{"BaseCrop":{"stage":5}},0,{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":8}},0,   
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+
+    ],
+    [
+        0,0,0,0,{"BaseCrop":{"stage":2}},0,{"BaseCrop":{"stage":5}},0,{"BaseCrop":{"stage":2}},{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":8}},0,   
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        -1,-1,-1,-1,-1,-1,-1,-1,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        -1,-1,-1,-1,-1,-1,-1,-1,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ],
+    [
+        0,0,0,0,0,0,{"BaseCrop":{"stage":5}},0,{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":8}},0,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        -1,-1,-1,-1,-1,-1,-1,-1,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        -1,-1,-1,-1,-1,-1,-1,-1,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ],
+    [
+        0,{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":8}},0,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        -1,-1,-1,-1,-1,-1,-1,-1,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        -1,-1,-1,-1,-1,-1,-1,-1,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ]
+]`
+
 const map = parseMap(mapString2)
 
 const defaultWidth = 11
