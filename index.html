@@ -72,7 +72,7 @@ class Crop{
     }
 
     canHarvest(){
-        return this.stage > 3
+        return this.stage > 4
     }
 
     moneyGain(){
@@ -128,13 +128,19 @@ class BaseCrop extends Crop{
 
     harvestCost(){
         if(this.stage == 8){
-            return -1 // If fully grown, you get 1 energy back.
+            return -.5 // If fully grown, you get .5 energy back.
         }
         return super.harvestCost()
     }
 }
 
-const crops = {
+/**
+ * Each loadable class should have a toJson that returns 
+ * [this.constructor.name]: {the stuff in the class}
+ * and a constructor that takes in 
+ * {the stuff in the class}
+ */ 
+const loadableClasses = {
     "BaseCrop": BaseCrop,
 }
 
@@ -144,8 +150,8 @@ function parseMap(text){
     for (row of newMap){
         for(let i = 0; i < row.length; i ++){
             for(key in row[i]){
-                if (key in crops){
-                    row[i] = new (crops[key])(row[i][key])
+                if (key in loadableClasses){
+                    row[i] = new (loadableClasses[key])(row[i][key])
                 }
             }
         }
@@ -224,13 +230,15 @@ class Entity{
 
         const target = map[targetLocation.y]?.[targetLocation.x]
 
-        if (target instanceof Crop){
-            if (this.energy < 1){
-                return
-            }
-            this.energy -= 1
+        if (this.energy < 1){
+            return
+        }
+        this.energy -= 1
 
+        if (target instanceof Crop){
             target.grow()
+        } if (isFinite(target) && target != 9){
+            map[targetLocation.y][targetLocation.x] = new BaseCrop()
         }
     }
 
@@ -248,7 +256,13 @@ class Farmer extends Entity{
 
 }
 
-const mapString2 = '[[9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9],[9,0,0,{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,0,0],[9,0,{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,{"BaseCrop":{"stage":5,"maxStage":8}},0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0],[9,0,0,0,{"BaseCrop":{"stage":2,"maxStage":8}},0,{"BaseCrop":{"stage":5,"maxStage":8}},0,{"BaseCrop":{"stage":2,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0],[9,0,0,0,0,0,{"BaseCrop":{"stage":5,"maxStage":8}},0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0],[9,{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0]]'
+const mapString2 = `[
+    [9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9],
+    [9,0,0,{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,0,0],
+    [9,0,{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,{"BaseCrop":{"stage":5,"maxStage":8}},0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0],
+    [9,0,0,0,{"BaseCrop":{"stage":2,"maxStage":8}},0,{"BaseCrop":{"stage":5,"maxStage":8}},0,{"BaseCrop":{"stage":2,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0],
+    [9,0,0,0,0,0,{"BaseCrop":{"stage":5,"maxStage":8}},0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0],
+    [9,{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},{"BaseCrop":{"stage":1,"maxStage":8}},0,0,0,0,0,0,{"BaseCrop":{"stage":8,"maxStage":8}},0]]`
 const map = parseMap(mapString2)
 
 const defaultWidth = 11
