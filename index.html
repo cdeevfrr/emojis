@@ -103,11 +103,10 @@ class Crop{
         this.stage += 1
     }
 
-    harvest(harvestingEntity){
-        if( harvestingEntity.tryDecrementEnergy(this.harvestCost()) ){
-            harvestingEntity.increaseMoney(this.moneyGain())
-            this.stage = this.newStageFromHarvest()
-        }
+    harvest(){
+        const moneyGain = this.moneyGain()
+        this.stage = this.newStageFromHarvest()
+        return moneyGain
     }
 
     image(){
@@ -141,6 +140,27 @@ class BaseCrop extends Crop{
 }
 
 /**
+ * The farmer house is a tile that stores all the info about the farmer
+ * The (a?) farmer entity just moves around and takes actions based on their associated farmerHouse's data.
+ * Farmer entities spawn at the Farmer house.
+ */
+class FarmerHouse {
+    age;
+
+    constructor({age}){
+        this.age = age || 1
+    }
+
+    toJSON(){
+        return {
+            [this.constructor.name]: {
+                age: this.age
+            }
+        }
+    }
+}
+
+/**
  * Each loadable class should have a toJson that returns 
  * [this.constructor.name]: {the stuff in the class}
  * and a constructor that takes in 
@@ -148,6 +168,7 @@ class BaseCrop extends Crop{
  */ 
 const loadableClasses = {
     "BaseCrop": BaseCrop,
+    "FarmerHouse": FarmerHouse,
 }
 
 function parseMap(text){
@@ -170,6 +191,13 @@ const directions = {
     s: {x: 0,  y: 1},
     d: {x: 1,  y: 0},
     w: {x: 0,  y: -1},
+}
+
+const playerIcon = {
+    "d": "😗",
+    "s": "🙃",
+    "a": "🧐",
+    "w": "🙂",
 }
 
 class Entity{
@@ -216,18 +244,16 @@ class Entity{
         console.log(`Handling harvest interaction at ${JSON.stringify(targetLocation)}`)
         let target = map[targetLocation.y]?.[targetLocation.x]
 
-        if (target == null){
-            return
-        }
-
         if(target instanceof Crop){
-            if(target.canHarvest()){
-                target.harvest(this) // the crop will decrement the entity's energy.
-                if (target.stage == -1){
-                    map[targetLocation.y][targetLocation.x] = 0
-                }
+            if(target.canHarvest() && this.energy >= target.harvestCost()){
+                this.energy -= target.harvestCost()
+                const moneyMade = target.harvest() // modifies target.
+                this.money += moneyMade
+                return moneyMade 
             }
         }
+
+        return NaN // Didn't make any money.
     }
 
     grow(){
@@ -258,8 +284,26 @@ class Entity{
     }
 }
 
-class Farmer extends Entity{
+class Player extends Entity{
+    constructor({location, direction, money, energy}){
+        super()
+        this.location = location
+        this.direction = direction
+        this.money = money
+        this.energy = energy
+    }
+}
 
+class Farmer extends Entity{
+    house;
+    constructor(farmerHouse, location){
+        super()
+        this.house = farmerHouse
+        this.location = location
+        this.direction = "d"
+        this.money = 0
+        this.energy = 40
+    }
 }
 
 const mapString2 = `[
@@ -334,6 +378,15 @@ const mapString2 = `[
 
 const map = parseMap(mapString2)
 
+const entities = []
+for (let j = 0; j < map.length; j ++){
+    for (let i = 0; i < map[j].length; i ++){
+        if (map[j][i] instanceof FarmerHouse){
+            entities.push(new Farmer(map[j][i], {x: i, y: j}))
+        }
+    }
+}
+
 const defaultWidth = 11
 const defaultHeight= 7
 
@@ -382,29 +435,12 @@ window.onload = async function(){
         }
     }
 
-    const playerIcon = {
-        "d": "😗",
-        "s": "🙃",
-        "a": "🧐",
-        "w": "🙂",
-    }
-
-    class Player extends Entity{
-        constructor(){
-            super()
-            this.location = {x: 3, y: 3}
-            this.direction = "d"
-            this.money = 0
-            this.energy = 40
-        }
-
-        increaseMoney(amount){
-            this.money += amount
-            notify(`+ $${amount}`)
-        }
-    }
-
-    const player = new Player()
+    const player = new Player({
+        location: {x: 3, y: 3},
+        direction: "d",
+        money: 0,
+        energy: 40,
+    })
 
     // End pointer lock listeners
 
@@ -420,6 +456,11 @@ window.onload = async function(){
             const row = []
             for (let i = x- Math.floor(width/2); i < x + Math.ceil(width / 2); i+=1){
                 row.push(findImageFor(map[j]?.[i]))
+                for (const entity in entities){
+                    if(entity.location.x == i && entity.location.y == j){
+                        row[row.length - 1] = playerIcon[entity.direction]
+                    }
+                }
             }
             toPrint.push(row)
         }
@@ -460,7 +501,10 @@ window.onload = async function(){
         }
 
         if (event.key == "h"){
-            player.harvest()
+            const moneyGained = player.harvest()
+            if (moneyGained > 0){
+                notify(`+ $${moneyGained}`)
+            }
         }
 
         printLocation({})
@@ -488,16 +532,25 @@ window.onload = async function(){
 
     function tick(){
         console.log("Running tick");
-        // Grow things
-        for (const row of map){
-            for (const target of row){
-                if (target.canAutoGrow && target.canAutoGrow()){
-                    if (Math.random() < .08){
-                        target.grow()
+        for (let j = 0; j < map.length; j ++){
+            for (let i = 0; i < map[j].length; i ++){
+                const target = map[j][i]
+                if (target instanceof Crop){
+                    // Grow things
+                    if (target.canAutoGrow()){
+                        if (Math.random() < .08){
+                            target.grow()
+                        }
+                    }
+                    // Cleanup any crops that should be blank earth now.
+                    // Usually this happens from harvesting an overgrown crop.
+                    if(target.stage == -1){ 
+                        map[j][i] = 0
                     }
                 }
             }
         }
+
         // Gain energy
         if (player.energy < maxEntityEnergy){
             player.energy += .25
