@@ -2,7 +2,7 @@
 <body>
     <div style="justify-content: center; text-align: center; display: flex">
         <div>
-            <p id="leftNotification" style="height: 100px"></p>
+            <p id="leftNotification" style="height: 100px; width: 150px"></p>
             <p>
                 Move with asdw
             </p>
@@ -13,7 +13,7 @@
         <textarea id="mainScreen" readonly style="height:8.6em; width: 8em ; font-size: 10vmin; text-align: center; margin:auto">
         </textarea>
         <div>
-            <p id="rightNotification" style="height: 100px"></p>
+            <p id="rightNotification" style="height: 100px; width: 150px"></p>
             <p>T gives a little bit of energy 😉</p>
         </div>
 
@@ -174,17 +174,17 @@ class BaseCrop extends Crop{
  * Farmer entities spawn at the Farmer house.
  */
 class FarmerHouse extends MapElement{
-    age;
+    playerOpinion;
 
-    constructor({age}){
+    constructor({playerOpinion}){
         super()
-        this.age = age || 1
+        this.playerOpinion = playerOpinion || -5
     }
 
     toJSON(){
         return {
             [this.constructor.name]: {
-                age: this.age
+                playerOpinion: this.playerOpinion
             }
         }
     }
@@ -236,6 +236,19 @@ const playerIcon = {
     "s": "🙃",
     "a": "🧐",
     "w": "🙂",
+}
+
+const enemyIcon = {
+    "d": "👺",
+    "s": "😡",
+    "a": "🤨",
+    "w": "😤",
+}
+const relationshipIcon = {
+    "d": "😘",
+    "s": "🙃",
+    "a": "😏",
+    "w": "🥰",
 }
 
 class Entity{
@@ -325,12 +338,17 @@ class Player extends Entity{
         this.money = money
         this.energy = energy
     }
+
+    image(){
+        return playerIcon[this.direction]
+    }
 }
 
 class Farmer extends Entity{
     house;
     houseLocation;
     squareMoveNextGoal;
+    playerOpinion;
 
     constructor(farmerHouse, myLocation, houseLocation){
         super()
@@ -471,6 +489,105 @@ class Farmer extends Entity{
             y: this.location.y - this.houseLocation.y, 
         }
     }
+
+    image(){
+        if (this.house.playerOpinion > 100){
+            return relationshipIcon[this.direction]
+        }
+        if (this.house.playerOpinion < -2){
+            return enemyIcon[this.direction]
+        }
+        return playerIcon[this.direction]
+    }
+
+    noticePlayerHarvest(player){
+        this.house.playerOpinion -= 2.5
+
+        console.log(`Noticing harvest when house is ${JSON.stringify(this.house)}`)
+        console.log(`Noticing harvest when opinion is ${this.house.playerOpinion}`)
+        if (this.house.playerOpinion < -10){
+            player.money -= 10
+            return "Get your butt out of here you varmit! Quit stealin my hard earned work! You're paying me double for that."
+        }
+        if (this.house.playerOpinion < -5){
+            return "I told you, those are MY crops!"
+        }
+
+        if (this.house.playerOpinion == -5){
+            return "Hey!! Those are my crops! Go grow your own."
+        }
+
+        if (this.house.playerOpinion < 0){
+            return "humph."
+        }
+
+        if (this.house.playerOpinion < 10){
+            return "I'll let you get away with it this time you rascal"
+        }
+
+        if (this.house.playerOpinion < 20){
+            return "Since you helped grow it, you can help enjoy it"
+        }
+
+        if (this.house.playerOpinion < 50){
+            return "You've been mighty kind to me and I appreciate it. Hope that's yummy!"
+        }
+
+        if (this.house.playerOpinion < 100){
+            return "That T looks almost as sweet as you!"
+        }
+
+        if (this.house.playerOpinion < 150){
+            return "You're such a sweetheart."
+        }
+
+        return "Come back soon, ok cutie?"
+
+    }
+
+    noticePlayerGrow(player){
+
+        this.house.playerOpinion += 1
+
+        if (-10 < this.house.playerOpinion < -5){
+            return "That's right! Put back what you stole."
+        }
+        if (this.house.playerOpinion < 0){
+            return "What, you tryin to get on my good side or somethin?"
+        }
+        if (this.house.playerOpinion < 7){
+            return "humph. Thanks."
+        }
+        if (this.house.playerOpinion < 15){
+            return "Alright, you aint so bad"
+        }
+        if (this.house.playerOpinion < 25){
+            return "'preciate that"
+        }
+        if (this.house.playerOpinion < 75){
+            return "Thanks for all the work you do around here!"
+        }
+        if (this.house.playerOpinion < 125){
+            return "You're being awful nice for someone who's just being friendly"
+        }
+        if (this.house.playerOpinion < 175){
+            return "You're gonna make me blush!"
+        }
+        return "Thanks a bushel sweetheart"
+    }
+
+}
+
+function onCloseFarmer(player, entitiesList, callback){
+    for (const entity of entitiesList){
+        if(entity instanceof Farmer){
+            if (
+                Math.abs(entity.location.x - player.location.x) <= 3 &&
+                Math.abs(entity.location.y - player.location.y) <= 3
+            )
+            callback(player, entity)
+        }
+    }
 }
 
 const mapString = `[
@@ -517,7 +634,7 @@ const mapString = `[
         {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
         -1,-1,-1,-1,-1,-1,-1,-1,
         {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,{"FarmerHouse": {"age": 1}},0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        0,0,0,0,{"FarmerHouse": {"playerOpinion": -5}},0,0,0,0,0,0,0,0,0,0,0,0,0,0
     ],
     [
         0,0,0,0,0,0,{"BaseCrop":{"stage":5}},0,{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":8}},0,
@@ -636,7 +753,7 @@ window.onload = async function(){
                 row.push(findImageFor(map[j]?.[i]))
                 for (const entity of entities){
                     if(entity.location.x == i && entity.location.y == j){
-                        row[row.length - 1] = playerIcon[entity.direction]
+                        row[row.length - 1] = entity.image()
                     }
                 }
             }
@@ -676,12 +793,22 @@ window.onload = async function(){
 
         if (event.key == "Enter"){
             player.grow()
+            onCloseFarmer(player, entities, (player, farmer) => {
+                const message = farmer.noticePlayerGrow(player)
+                if (Math.random() < .5){
+                    notify(message)
+                }
+            })
         }
 
         if (event.key == "h"){
             const moneyGained = player.harvest()
             if (moneyGained > 0){
                 notify(`+ $${moneyGained}`)
+                onCloseFarmer(player, entities, (player, farmer) => {
+                    const message = farmer.noticePlayerHarvest(player)
+                    notify(message)
+                })
             }
         }
 
@@ -699,7 +826,7 @@ window.onload = async function(){
         if (endNotificationTimer){
             clearTimeout(endNotificationTimer)
         }
-        endNotificationTimer = setTimeout(endNotification, 1000)
+        endNotificationTimer = setTimeout(endNotification, 3000)
     }
 
     function endNotification(){
