@@ -10,7 +10,7 @@
                 Grow (enter) or Harvest (h) your crops!
             </p>
         </div>
-        <textarea id="mainScreen" readonly style="height:8.6em; width: 7.2em ; font-size: 10vmin; text-align: center; margin:auto">
+        <textarea id="mainScreen" readonly style="height:8.6em; width: 8em ; font-size: 10vmin; text-align: center; margin:auto">
         </textarea>
         <div>
             <p id="rightNotification" style="height: 100px"></p>
@@ -46,10 +46,38 @@ const cropImages = {
     8: "T",
 }
 
-class Crop{
+/** This "abstract" class is mostly just a template
+ * to show you how map elements can be built.
+ * And it's used to check if something is a MapElement
+ * or is just a number in the runtime map array.
+ */
+class MapElement{
+    // mapData;
+
+    constructor(/*mapData*/){}
+    toJSON(){
+        return {[this.constructor.name]: {/*mapData*/}}
+    }
+
+    image(){
+        return "?"
+    }
+
+    blocksMovement(){
+        return true
+    }
+}
+
+function addVector(v1, v2){
+    return {
+        x: v1.x + v2.x,
+        y: v1.y + v2.y
+    }
+}
+
+class Crop extends MapElement{
     stage;
     maxStage;
-    constructor(){}
 
     toJSON(){
         return {
@@ -57,6 +85,14 @@ class Crop{
                 stage: this.stage, 
             }
         }
+    }
+
+
+    image(){
+        if (this.stage in cropImages){
+            return cropImages[this.stage]
+        }
+        return "#"
     }
 
     blocksMovement(){
@@ -108,13 +144,6 @@ class Crop{
         this.stage = this.newStageFromHarvest()
         return moneyGain
     }
-
-    image(){
-        if (this.stage in cropImages){
-            return cropImages[this.stage]
-        }
-        return "#"
-    }
 }
 
 class BaseCrop extends Crop{
@@ -144,10 +173,11 @@ class BaseCrop extends Crop{
  * The (a?) farmer entity just moves around and takes actions based on their associated farmerHouse's data.
  * Farmer entities spawn at the Farmer house.
  */
-class FarmerHouse {
+class FarmerHouse extends MapElement{
     age;
 
     constructor({age}){
+        super()
         this.age = age || 1
     }
 
@@ -157,6 +187,14 @@ class FarmerHouse {
                 age: this.age
             }
         }
+    }
+
+    image(){
+        return "🏠"
+    }
+
+    blocksMovement(){
+        return true
     }
 }
 
@@ -216,6 +254,8 @@ class Entity{
             this.location.x = newLocation.x
             this.location.y = newLocation.y
         }
+
+        return canMoveThere
     }
 
     canMove(x, y){
@@ -223,7 +263,7 @@ class Entity{
         && 0 <= x && x < map[y].length 
         && ! blockingMovementTiles.has(map[y][x])
         && ( map[y][x] in imageFor || 
-          (map[y][x] instanceof Crop && !map[y][x].blocksMovement())
+          (map[y][x] instanceof MapElement && !map[y][x].blocksMovement())
         );
     }
 
@@ -241,7 +281,6 @@ class Entity{
 
     harvest(){
         const targetLocation = this.interactingLocation()
-        console.log(`Handling harvest interaction at ${JSON.stringify(targetLocation)}`)
         let target = map[targetLocation.y]?.[targetLocation.x]
 
         if(target instanceof Crop){
@@ -258,7 +297,6 @@ class Entity{
 
     grow(){
         const targetLocation = this.interactingLocation()
-        console.log(`Handling grow interaction at ${JSON.stringify(targetLocation)}`)
 
         const target = map[targetLocation.y]?.[targetLocation.x]
 
@@ -275,12 +313,7 @@ class Entity{
     }
 
     interactingLocation(){
-        const toAdd = directions[this.direction]
-
-        return {
-            x: this.location.x + toAdd.x,
-            y: this.location.y + toAdd.y,
-        }
+        return addVector(this.location, directions[this.direction])
     }
 }
 
@@ -296,17 +329,151 @@ class Player extends Entity{
 
 class Farmer extends Entity{
     house;
-    constructor(farmerHouse, location){
+    houseLocation;
+    squareMoveNextGoal;
+
+    constructor(farmerHouse, myLocation, houseLocation){
         super()
         this.house = farmerHouse
-        this.location = location
-        this.direction = "d"
+        this.location = myLocation
+        this.houseLocation = houseLocation
+        this.direction = "w"
         this.money = 0
         this.energy = 40
+
+        /// Small state so that farmers can do 
+        // different things based on last ticks
+        // behavior.
+        this.plannedMoves = []
+        this.grewLastTurn = false
+        this.squareMoveNextGoal = {x: 2, y: 2}
+    }
+
+    tickMove(){
+        if (this.wantsToHarvest()){
+            this.harvest()
+            return
+        }
+        if(this.plannedMoves.length > 0){
+            this.tryMove(this.plannedMoves.pop())
+        } else {
+            if (!this.grewLastTurn){
+                if(this.energy > 10 ){
+                    this.grow()
+                }
+                this.grewLastTurn = true
+            } else {
+                this.squareMove()
+                this.grewLastTurn = false
+            }
+        }
+    }
+
+    wantsToHarvest(){
+        const targetLocation = this.interactingLocation()
+        let target = map[targetLocation.y]?.[targetLocation.x]
+
+        if(target instanceof Crop){
+            if (target.harvestCost() < 0){
+                return true
+            }
+        }
+    }
+
+    wantsToGrow(){
+        const targetLocation = this.interactingLocation()
+        let target = map[targetLocation.y]?.[targetLocation.x]
+
+        if(target instanceof Crop){
+            if (target.canAutoGrow()){
+                return false
+            }
+        }
+        return true
+    }
+
+    changeHeadingToNextSquareMoveGoal(){
+        if (this.squareMoveNextGoal.x > 0 ^ this.squareMoveNextGoal.y > 0){
+            this.squareMoveNextGoal.y = - this.squareMoveNextGoal.y
+        } else {
+            this.squareMoveNextGoal.x = - this.squareMoveNextGoal.x
+        }
+    }
+
+    /**
+     * Move around the house clockwise.
+     * If you are obstructed & CAN harvest, do so.
+     * If you are obstructed & CANT harvest, try to move in the other direction.
+     */ 
+    squareMove(){
+        const currentLocation = this.locationRelativeToHouse()
+        const xAdjust = currentLocation.x - this.squareMoveNextGoal.x
+        const yAdjust = currentLocation.y - this.squareMoveNextGoal.y
+        if (xAdjust > 0){
+            // Move left
+            this.tryMove("a")
+        }
+        else if (xAdjust < 0){
+            // move right
+            this.tryMove("d")
+        }
+        else {
+            if (yAdjust > 0){
+                // move up
+                this.tryMove("w")
+            }
+            else if (yAdjust < 0){
+                // move down
+                this.tryMove("s")
+            }
+            else {
+                this.changeHeadingToNextSquareMoveGoal()
+            }
+        }
+    }
+
+    /**
+     * Try to move in that direction.
+     * If blocked, check if you can harvest. If so do so and stop there.
+     * If blocked and can't harvest, check if you can go around in either direction.
+     * If so do so and stop there.
+     * 
+     * Finally, return false if none of those things worked.
+     */
+    tryMove(direction){
+        if (this.move(direction)){ // move(direction) also sets this entity's direction heading.
+            return true
+        }
+        if (! isNaN(this.harvest())){
+            return true
+        }
+        
+        const headingVector = directions[direction] // vector
+        const secondMoves = headingVector.x == 0? ["d", "a"] : ["s", "w"]
+        for (const secondMove of secondMoves){
+            const intermediatePoint = addVector(this.location, directions[secondMove])
+            const finalPoint = addVector(intermediatePoint, headingVector)
+            if ( 
+                (this.canMove(intermediatePoint.x, intermediatePoint.y))
+                && this.canMove(finalPoint.x, finalPoint.y)
+            ){
+                this.move(secondMove)
+                this.plannedMoves.push(direction)
+            }
+            return true
+        }
+        return false
+    }
+
+    locationRelativeToHouse(){
+        return {
+            x: this.location.x - this.houseLocation.x, 
+            y: this.location.y - this.houseLocation.y, 
+        }
     }
 }
 
-const mapString2 = `[
+const mapString = `[
     [
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
         {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
@@ -350,7 +517,7 @@ const mapString2 = `[
         {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
         -1,-1,-1,-1,-1,-1,-1,-1,
         {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        0,0,0,0,{"FarmerHouse": {"age": 1}},0,0,0,0,0,0,0,0,0,0,0,0,0,0
     ],
     [
         0,0,0,0,0,0,{"BaseCrop":{"stage":5}},0,{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":8}},0,
@@ -373,16 +540,27 @@ const mapString2 = `[
         -1,-1,-1,-1,-1,-1,-1,-1,
         {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ],
+    [
+        0,{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":8}},0,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        -1,-1,-1,-1,-1,-1,-1,-1,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        -1,-1,-1,-1,-1,-1,-1,-1,
+        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
     ]
 ]`
 
-const map = parseMap(mapString2)
+const map = parseMap(mapString)
 
 const entities = []
 for (let j = 0; j < map.length; j ++){
     for (let i = 0; i < map[j].length; i ++){
         if (map[j][i] instanceof FarmerHouse){
-            entities.push(new Farmer(map[j][i], {x: i, y: j}))
+            entities.push(new Farmer(map[j][i], {x: i + 2, y: j + 1}, {x: i, y: j}))
         }
     }
 }
@@ -456,7 +634,7 @@ window.onload = async function(){
             const row = []
             for (let i = x- Math.floor(width/2); i < x + Math.ceil(width / 2); i+=1){
                 row.push(findImageFor(map[j]?.[i]))
-                for (const entity in entities){
+                for (const entity of entities){
                     if(entity.location.x == i && entity.location.y == j){
                         row[row.length - 1] = playerIcon[entity.direction]
                     }
@@ -477,7 +655,7 @@ window.onload = async function(){
             return imageFor[mapElement]
         }
 
-        if (mapElement instanceof Crop){
+        if (mapElement instanceof MapElement){
             return mapElement.image()
         }
 
@@ -554,6 +732,13 @@ window.onload = async function(){
         // Gain energy
         if (player.energy < maxEntityEnergy){
             player.energy += .25
+        }
+
+        // Move entities
+        for (const entity of entities){
+            if (entity instanceof Farmer){
+                entity.tickMove()
+            }
         }
 
         printLocation({})
