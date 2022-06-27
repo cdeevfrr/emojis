@@ -1,17 +1,5 @@
 # TODO
 
-# Farmer
-### NPC
-- Create farmer entity
-    - Make map bigger
-    - Make house tile
-    - Put farmer at the new location
-- Make farmer move
-    - Generalize movement
-        - class for entities/moveable things.
-        - Put functionality for 'move' into the class.
-    - Give farmer a "nextMove" function, call it ontick
-
 # Make crop types
 - Make a new crop type
     - Cash crop vs energy crop?
@@ -21,13 +9,7 @@
 
 # Inventory
 
-
-# Dialogue
-- Make the farmer head towards you
-- Make a dialogue behavior
-- Hello world dialogue
-
-# Seed tooltops
+# Seed tooltips
 - Some way to see info about a crop
 
 # Gifts
@@ -38,3 +20,7 @@
 # Abstract the map
 - Arbitrary size map?
 - Update tick logic to only be for loaded squares of the map
+
+# Bugfix
+- Figure out how to get the spacing right around emojis
+- Figure out how to get multiple files
