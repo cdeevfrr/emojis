@@ -67,7 +67,7 @@ export class Farmer extends Entity{
 
     wantsToHarvest(){
         const targetLocation = this.interactingLocation()
-        let target = this.map[targetLocation.y]?.[targetLocation.x]
+        let target = this.map.get(targetLocation)
 
         if(target instanceof Crop){
             // If the target gives energy
@@ -152,7 +152,7 @@ export class Farmer extends Entity{
             return true
         }
         const targetLocation = this.interactingLocation()
-        let target = map[targetLocation.y]?.[targetLocation.x]
+        let target = this.map.get(targetLocation)
         if (target instanceof Crop && target.harvestCost() > 0 && target.blocksMovement() && !this.currentlyWaiting){
             for (const i of [1,2,3,4,5]){
                 this.plannedMoves.push("wait")
