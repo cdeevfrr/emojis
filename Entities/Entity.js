@@ -51,19 +51,20 @@ export class Entity{
     }
 
     grow(){
+        if (this.energy < 1){
+            return false
+        }
+
         const targetLocation = this.interactingLocation()
 
         const target = this.map.get(targetLocation)
 
-        if (this.energy < 1){
-            return false
-        }
-        this.energy -= 1
-
         if (target instanceof Crop){
+            this.energy -= 1
             target.grow()
             return true
         } if (isFinite(target) && target != 9){
+            this.energy -= 1
             this.map.set(targetLocation, new BaseCrop())
             return true
         }

@@ -6,10 +6,12 @@ const blockingMovementTiles = new Set([
     9,
 ])
 
+const unknownImage = "0"
+
 const imageFor = {
     0: "_",
     // 1: Crop image
-    9: "▓",
+    9: unknownImage,
 }
 
 /**
@@ -78,6 +80,6 @@ export class Map {
             return target.image()
         }
 
-        return "0"
+        return unknownImage
     }
 }
