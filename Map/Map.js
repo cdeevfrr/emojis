@@ -25,8 +25,8 @@ const imageFor = {
 
 export class Map {
     array;
-    constructor(text){
-        this.array = JSON.parse(text)
+    constructor(jsonObject){
+        this.array = jsonObject
         for (const row of this.array){
             for(let i = 0; i < row.length; i ++){
                 for(const key in row[i]){

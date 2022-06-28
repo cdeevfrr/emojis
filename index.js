@@ -1,11 +1,10 @@
-import { MapElement } from './Map/MapElement.js'
-import { BaseCrop } from './Crops/BaseCrop.js'
 import { Crop } from './Crops/Crop.js'
 import { FarmerHouse } from './Map/FarmerHouse.js'
 import { Farmer } from './Entities/Farmer.js'
 import { Player } from './Entities/Player.js'
 import * as Vector from './Map/Vectors.js'
 import { Map } from './Map/Map.js'
+import * as mapJson from './Map/mapFile.json' assert {type: 'json'}
 
 const maxEntityEnergy = 100
 
@@ -21,88 +20,7 @@ function onCloseFarmer(player, entitiesList, callback){
     }
 }
 
-const mapString = `[
-    [
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        -1,-1,-1,-1,-1,-1,-1,-1,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        -1,-1,-1,-1,-1,-1,-1,-1,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-    ],
-    [
-        0,0,0,{"BaseCrop":{"stage":1}},0,0,0,0,{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},0,0,0,0,0,0,0,0,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        -1,-1,-1,-1,-1,-1,-1,-1,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        -1,-1,-1,-1,-1,-1,-1,-1,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-    ],
-    [
-        0,0,{"BaseCrop":{"stage":1}},0,0,0,{"BaseCrop":{"stage":5}},0,{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":8}},0,   
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-
-    ],
-    [
-        0,0,0,0,{"BaseCrop":{"stage":2}},0,{"BaseCrop":{"stage":5}},0,{"BaseCrop":{"stage":2}},{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":8}},0,   
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        -1,-1,-1,-1,-1,-1,-1,-1,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        -1,-1,-1,-1,-1,-1,-1,-1,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,{"FarmerHouse": {"playerOpinion": -5}},0,0,0,0,0,0,0,0,0,0,0,0,0,0
-    ],
-    [
-        0,0,0,0,0,0,{"BaseCrop":{"stage":5}},0,{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":8}},0,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        -1,-1,-1,-1,-1,-1,-1,-1,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        -1,-1,-1,-1,-1,-1,-1,-1,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-    ],
-    [
-        0,{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":8}},0,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        -1,-1,-1,-1,-1,-1,-1,-1,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        -1,-1,-1,-1,-1,-1,-1,-1,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-    ],
-    [
-        0,{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},{"BaseCrop":{"stage":1}},0,0,0,0,0,0,{"BaseCrop":{"stage":8}},0,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        -1,-1,-1,-1,-1,-1,-1,-1,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        -1,-1,-1,-1,-1,-1,-1,-1,
-        {"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},{"BaseCrop":{"stage":9}},
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-    ]
-]`
-
-const map = new Map(mapString)
+const map = new Map(mapJson.default)
 
 const entities = []
 map.forEachPoint((point, target) => {
