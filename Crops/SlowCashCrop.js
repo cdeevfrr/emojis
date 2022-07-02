@@ -3,7 +3,8 @@ import {Crop, weedImage} from "./Crop.js"
 const cropImages = {
     1: ".",
     2: ",",
-    3: ":",
+    3: "+",
+    4: ":",
     4: "i",
     5: "l",
     6: ")",
@@ -61,6 +62,13 @@ export class SlowCashCrop extends Crop{
                 return -3 // Just before optimal harvesting time, you can harvest it for a tiny bit of energy.
             }
             return 10
+        }
+        return 1
+    }
+
+    newStageFromHarvest(){
+        if(this.unknownStage()){
+            return -1
         }
         return 1
     }

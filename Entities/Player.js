@@ -1,3 +1,6 @@
+import { BaseCrop } from '../Crops/BaseCrop.js'
+import { SlowCashCrop } from '../Crops/SlowCashCrop.js'
+import { SlowEnergyCrop } from '../Crops/SlowEnergyCrop.js'
 import {Entity} from './Entity.js'
 
 const playerIcon = {
@@ -19,5 +22,16 @@ export class Player extends Entity{
 
     image(){
         return playerIcon[this.direction]
+    }
+
+    getCurrentCropType(){
+        switch(Math.floor(Math.random() * 3)){
+            case 0:
+                return BaseCrop
+            case 1:
+                return SlowCashCrop
+            case 2:
+                return SlowEnergyCrop
+        }
     }
 }

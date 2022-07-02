@@ -133,7 +133,8 @@ window.onload = async function(){
         }
 
         if (event.key == "Enter"){
-            const growSuccessful = player.grow()
+            const cropClass = player.getCurrentCropType()
+            const growSuccessful = player.grow(cropClass)
             if (growSuccessful){
                 onCloseFarmer(player, entities, (player, farmer) => {
                     const message = farmer.noticePlayerGrow(player)

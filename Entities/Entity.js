@@ -50,7 +50,7 @@ export class Entity{
         return NaN // Didn't make any money.
     }
 
-    grow(){
+    grow(cropClass = BaseCrop){
         if (this.energy < 1){
             return false
         }
@@ -65,7 +65,7 @@ export class Entity{
             return true
         } if (isFinite(target) && target != 9){
             this.energy -= 1
-            this.map.set(targetLocation, new BaseCrop())
+            this.map.set(targetLocation, new cropClass())
             return true
         }
         return false

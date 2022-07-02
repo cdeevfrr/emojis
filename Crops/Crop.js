@@ -77,18 +77,25 @@ export class Crop extends MapElement{
     grow(){
         this.stage += 1
         if (this.canAutoGrow()){
-            // Eventually, a crop could be saved or the timeout here stopped.
-            // So the crop should eventually save a state like "want to grow after" instead.
-            setTimeout(
-                () => {if (this.canAutoGrow()) {this.grow()}}, 
-                intervalsNeededBeforeGrowth(this.growchance, 100) * 1000 
-            )
+           this.startNextGrow()
         }
+    }
+
+    startNextGrow(){
+        setTimeout(
+            () => {
+                if (this.canAutoGrow()) {this.grow()}
+            }, 
+            intervalsNeededBeforeGrowth(this.growchance, 100) * 1000 
+        )
     }
 
     harvest(){
         const moneyGain = this.moneyGain()
         this.stage = this.newStageFromHarvest()
+        if (this.canAutoGrow()){
+            this.startNextGrow()
+        }
         return moneyGain
     }
 }
