@@ -180,12 +180,6 @@ window.onload = async function(){
         console.log("Running tick");
         map.forEachPoint((point, target) => {
             if (target instanceof Crop){
-                // Grow things
-                if (target.canAutoGrow()){
-                    if (Math.random() < .08){
-                        target.grow()
-                    }
-                }
                 // Cleanup any crops that should be blank earth now.
                 // Usually this happens from harvesting an overgrown crop.
                 if(target.stage == -1){ 

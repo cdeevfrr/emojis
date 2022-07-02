@@ -6,6 +6,7 @@ export class BaseCrop extends Crop{
         super()
         this.stage = stage || 1
         this.maxStage = maxStage || 8
+        this.growchance = .08
     }
 
     moneyGain(){

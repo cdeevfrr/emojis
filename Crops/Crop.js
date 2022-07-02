@@ -1,6 +1,7 @@
-import {MapElement} from './../Map/MapElement.js'
+import { MapElement } from './../Map/MapElement.js'
+import { intervalsNeededBeforeGrowth } from './GrowthIntervalCalculator.js';
 
-export const cropImages = {
+const cropImages = {
     1: ".",
     2: ",",
     3: "+",
@@ -10,6 +11,8 @@ export const cropImages = {
     7: "|",
     8: "T",
 }
+
+export const weedImage = "#"
 
 export class Crop extends MapElement{
     stage;
@@ -28,7 +31,7 @@ export class Crop extends MapElement{
         if (this.stage in cropImages){
             return cropImages[this.stage]
         }
-        return "#"
+        return weedImage
     }
 
     blocksMovement(){
@@ -73,6 +76,14 @@ export class Crop extends MapElement{
 
     grow(){
         this.stage += 1
+        if (this.canAutoGrow()){
+            // Eventually, a crop could be saved or the timeout here stopped.
+            // So the crop should eventually save a state like "want to grow after" instead.
+            setTimeout(
+                () => {if (this.canAutoGrow()) {this.grow()}}, 
+                intervalsNeededBeforeGrowth(this.growchance, 100) * 1000 
+            )
+        }
     }
 
     harvest(){
